@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -114,9 +116,20 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
-	resp, err := conn.PutScalingPolicy(&params)
+	var resp *applicationautoscaling.PutScalingPolicyOutput
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.PutScalingPolicy(&params)
+		if err != nil {
+			if isAWSErr(err, "FailedResourceAccessException", "Unable to assume IAM role") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("Error putting scaling policy: %s", err)
+		return err
 	}
 
 	d.Set("arn", resp.PolicyARN)
