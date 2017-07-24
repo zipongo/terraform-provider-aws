@@ -173,7 +173,109 @@ resource "aws_dms_replication_task" "dms_replication_task" {
 	migration_type = "full-load"
 	replication_instance_arn = "${aws_dms_replication_instance.dms_replication_instance.replication_instance_arn}"
 	replication_task_id = "tf-test-dms-replication-task-%[1]s"
-	replication_task_settings = "{\"TargetMetadata\":{\"TargetSchema\":\"\",\"SupportLobs\":true,\"FullLobMode\":false,\"LobChunkSize\":0,\"LimitedSizeLobMode\":true,\"LobMaxSize\":32,\"LoadMaxFileSize\":0,\"ParallelLoadThreads\":0,\"BatchApplyEnabled\":false},\"FullLoadSettings\":{\"FullLoadEnabled\":true,\"ApplyChangesEnabled\":false,\"TargetTablePrepMode\":\"DROP_AND_CREATE\",\"CreatePkAfterFullLoad\":false,\"StopTaskCachedChangesApplied\":false,\"StopTaskCachedChangesNotApplied\":false,\"ResumeEnabled\":false,\"ResumeMinTableSize\":100000,\"ResumeOnlyClusteredPKTables\":true,\"MaxFullLoadSubTasks\":8,\"TransactionConsistencyTimeout\":600,\"CommitRate\":10000},\"Logging\":{\"EnableLogging\":false,\"LogComponents\":[{\"Id\":\"SOURCE_UNLOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_LOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_CAPTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_APPLY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TASK_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"}],\"CloudWatchLogGroup\":null,\"CloudWatchLogStream\":null},\"ControlTablesSettings\":{\"historyTimeslotInMinutes\":5,\"ControlSchema\":\"\",\"HistoryTimeslotInMinutes\":5,\"HistoryTableEnabled\":false,\"SuspendedTablesTableEnabled\":false,\"StatusTableEnabled\":false},\"StreamBufferSettings\":{\"StreamBufferCount\":3,\"StreamBufferSizeInMB\":8,\"CtrlStreamBufferSizeInMB\":5},\"ChangeProcessingDdlHandlingPolicy\":{\"HandleSourceTableDropped\":true,\"HandleSourceTableTruncated\":true,\"HandleSourceTableAltered\":true},\"ErrorBehavior\":{\"DataErrorPolicy\":\"LOG_ERROR\",\"DataTruncationErrorPolicy\":\"LOG_ERROR\",\"DataErrorEscalationPolicy\":\"SUSPEND_TABLE\",\"DataErrorEscalationCount\":0,\"TableErrorPolicy\":\"SUSPEND_TABLE\",\"TableErrorEscalationPolicy\":\"STOP_TASK\",\"TableErrorEscalationCount\":0,\"RecoverableErrorCount\":-1,\"RecoverableErrorInterval\":5,\"RecoverableErrorThrottling\":true,\"RecoverableErrorThrottlingMax\":1800,\"ApplyErrorDeletePolicy\":\"IGNORE_RECORD\",\"ApplyErrorInsertPolicy\":\"LOG_ERROR\",\"ApplyErrorUpdatePolicy\":\"LOG_ERROR\",\"ApplyErrorEscalationPolicy\":\"LOG_ERROR\",\"ApplyErrorEscalationCount\":0,\"FullLoadIgnoreConflicts\":true},\"ChangeProcessingTuning\":{\"BatchApplyPreserveTransaction\":true,\"BatchApplyTimeoutMin\":1,\"BatchApplyTimeoutMax\":30,\"BatchApplyMemoryLimit\":500,\"BatchSplitSize\":0,\"MinTransactionSize\":1000,\"CommitTimeout\":1,\"MemoryLimitTotal\":1024,\"MemoryKeepTime\":60,\"StatementCacheSize\":50}}"
+	replication_task_settings = <<SETTINGS
+{
+  "ChangeProcessingDdlHandlingPolicy": {
+    "HandleSourceTableAltered": true,
+    "HandleSourceTableDropped": true,
+    "HandleSourceTableTruncated": true
+  },
+  "ChangeProcessingTuning": {
+    "BatchApplyMemoryLimit": 500,
+    "BatchApplyPreserveTransaction": true,
+    "BatchApplyTimeoutMax": 30,
+    "BatchApplyTimeoutMin": 1,
+    "BatchSplitSize": 0,
+    "CommitTimeout": 1,
+    "MemoryKeepTime": 60,
+    "MemoryLimitTotal": 1024,
+    "MinTransactionSize": 1000,
+    "StatementCacheSize": 50
+  },
+  "ControlTablesSettings": {
+    "ControlSchema": "",
+    "HistoryTableEnabled": false,
+    "HistoryTimeslotInMinutes": 5,
+    "StatusTableEnabled": false,
+    "SuspendedTablesTableEnabled": false,
+    "historyTimeslotInMinutes": 5
+  },
+  "ErrorBehavior": {
+    "ApplyErrorDeletePolicy": "IGNORE_RECORD",
+    "ApplyErrorEscalationCount": 0,
+    "ApplyErrorEscalationPolicy": "LOG_ERROR",
+    "ApplyErrorFailOnTruncationDdl": false,
+    "ApplyErrorInsertPolicy": "LOG_ERROR",
+    "ApplyErrorUpdatePolicy": "LOG_ERROR",
+    "DataErrorEscalationCount": 0,
+    "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+    "DataErrorPolicy": "LOG_ERROR",
+    "DataTruncationErrorPolicy": "LOG_ERROR",
+    "FailOnTransactionConsistencyBreached": false,
+    "FullLoadIgnoreConflicts": true,
+    "RecoverableErrorCount": -1,
+    "RecoverableErrorInterval": 5,
+    "RecoverableErrorThrottling": true,
+    "RecoverableErrorThrottlingMax": 1800,
+    "TableErrorEscalationCount": 0,
+    "TableErrorEscalationPolicy": "STOP_TASK",
+    "TableErrorPolicy": "SUSPEND_TABLE"
+  },
+  "FullLoadSettings": {
+    "CommitRate": 10000,
+    "CreatePkAfterFullLoad": false,
+    "MaxFullLoadSubTasks": 8,
+    "StopTaskCachedChangesApplied": false,
+    "StopTaskCachedChangesNotApplied": false,
+    "TargetTablePrepMode": "DROP_AND_CREATE",
+    "TransactionConsistencyTimeout": 600
+  },
+  "Logging": {
+    "CloudWatchLogGroup": null,
+    "CloudWatchLogStream": null,
+    "EnableLogging": false,
+    "LogComponents": [
+      {
+        "Id": "SOURCE_UNLOAD",
+        "Severity": "LOGGER_SEVERITY_DEFAULT"
+      },
+      {
+        "Id": "TARGET_LOAD",
+        "Severity": "LOGGER_SEVERITY_DEFAULT"
+      },
+      {
+        "Id": "SOURCE_CAPTURE",
+        "Severity": "LOGGER_SEVERITY_DEFAULT"
+      },
+      {
+        "Id": "TARGET_APPLY",
+        "Severity": "LOGGER_SEVERITY_DEFAULT"
+      },
+      {
+        "Id": "TASK_MANAGER",
+        "Severity": "LOGGER_SEVERITY_DEFAULT"
+      }
+    ]
+  },
+  "StreamBufferSettings": {
+    "CtrlStreamBufferSizeInMB": 5,
+    "StreamBufferCount": 3,
+    "StreamBufferSizeInMB": 8
+  },
+  "TargetMetadata": {
+    "BatchApplyEnabled": false,
+    "FullLobMode": false,
+    "LimitedSizeLobMode": true,
+    "LoadMaxFileSize": 0,
+    "LobChunkSize": 0,
+    "LobMaxSize": 32,
+    "ParallelLoadBufferSize": 0,
+    "ParallelLoadThreads": 0,
+    "SupportLobs": true,
+    "TargetSchema": ""
+  }
+}
+SETTINGS
 	source_endpoint_arn = "${aws_dms_endpoint.dms_endpoint_source.endpoint_arn}"
 	table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 	tags {
