@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -69,6 +71,19 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == new {
+						return true
+					}
+					if alias, ok := d.GetOk("kms_key_alias"); ok && alias == new {
+						return true
+					}
+					return false
+				},
+			},
+			"kms_key_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"home_region": {
 				Type:     schema.TypeString,
@@ -134,6 +149,8 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	log.Printf("[DEBUG] KMS Key ID after creation: %#v", d.Get("kms_key_id").(string))
+
 	return resourceAwsCloudTrailUpdate(d, meta)
 }
 
@@ -177,9 +194,28 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sns_topic_name", trail.SnsTopicName)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
 
-	// TODO: Make it possible to use KMS Key names, not just ARNs
-	// In order to test it properly this PR needs to be merged 1st:
-	// https://github.com/hashicorp/terraform/pull/3928
+	aliasRe := regexp.MustCompile(`:alias\/[^\/]+$`)
+	_, hasAlias := d.GetOk("kms_key_alias")
+	keyId := d.Get("kms_key_id").(string)
+	if !hasAlias && trail.KmsKeyId != nil && aliasRe.MatchString(keyId) {
+		d.Set("kms_key_alias", keyId)
+	}
+
+	if alias, ok := d.GetOk("kms_key_alias"); ok && trail.KmsKeyId != nil {
+		// Here we just double check the alias is pointing to the same key
+		// and if not we wipe it to raise a diff
+		conn := meta.(*AWSClient).kmsconn
+		out, err := conn.DescribeKey(&kms.DescribeKeyInput{
+			KeyId: aws.String(alias.(string)),
+		})
+		if err != nil {
+			return err
+		}
+		if *trail.KmsKeyId != *out.KeyMetadata.Arn {
+			d.Set("kms_key_alias", nil)
+		}
+	}
+
 	d.Set("kms_key_id", trail.KmsKeyId)
 
 	d.Set("arn", trail.TrailARN)
@@ -271,6 +307,8 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] CloudTrail updated: %s", t)
+
+	log.Printf("[DEBUG] KMS Key ID after update: %#v", d.Get("kms_key_id").(string))
 
 	return resourceAwsCloudTrailRead(d, meta)
 }
