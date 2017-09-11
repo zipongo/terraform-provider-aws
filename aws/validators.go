@@ -1521,3 +1521,14 @@ func validateSsmParameterType(v interface{}, k string) (ws []string, errors []er
 	}
 	return
 }
+
+func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+@[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+",
+			k, value))
+	}
+	return
+}
