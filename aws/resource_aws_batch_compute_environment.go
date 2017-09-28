@@ -19,6 +19,11 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		Update: resourceAwsBatchComputeEnvironmentUpdate,
 		Delete: resourceAwsBatchComputeEnvironmentDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
 				Type:         schema.TypeString,
