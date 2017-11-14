@@ -611,6 +611,8 @@ func init() {
 
 		"kms_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
+		"opsworks_region": "Use this to select a specific region for contacting Opsworks (eg: `us-east-1`) overriding the default region.\n",
+
 		"iam_endpoint": "Use this to override the default endpoint URL constructed from the `region`.\n",
 
 		"lambda_endpoint": "Use this to override the default endpoint URL constructed from the `region`\n",
@@ -726,6 +728,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		config.KmsEndpoint = endpoints["kms"].(string)
 		config.LambdaEndpoint = endpoints["lambda"].(string)
 		config.R53Endpoint = endpoints["r53"].(string)
+		config.OpsworksRegion = endpoints["opsworks"].(string)
 		config.RdsEndpoint = endpoints["rds"].(string)
 		config.S3Endpoint = endpoints["s3"].(string)
 		config.SnsEndpoint = endpoints["sns"].(string)
@@ -893,6 +896,11 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["r53_endpoint"],
+				"opsworks": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: descriptions["opsworks_region"],
 				},
 				"rds": {
 					Type:        schema.TypeString,
@@ -946,6 +954,7 @@ func endpointsToHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["kinesis"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["kms"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["lambda"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["opsworks"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["rds"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["s3"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["sns"].(string)))
