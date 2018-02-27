@@ -907,7 +907,7 @@ func endpointsSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "",
 					Description: descriptions["r53_endpoint"],
-                                },
+				},
 				"opsworks": {
 					Type:        schema.TypeString,
 					Optional:    true,
